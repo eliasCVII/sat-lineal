@@ -1,0 +1,18 @@
+#+title: Readme
+
+* Compilacion
+Para compilar usamos make
+#+begin_src shell
+make
+#+end_src
+
+* Uso
+La expresion latex va en el archivo ~expr~
+#+begin_src latex
+$$ (p \vee q) $$
+#+end_src
+
+Y el programa se ejecuta con
+#+begin_src shell
+make test # equivalente a ./lexer < expr
+#+end_src
