@@ -21,27 +21,29 @@
 input:
   DELIM exp DELIM {
     printf("\n> Valid Expression\n\n");
-    struct ast* nnf = translate($2);
-    struct ast* demorgan_nnf = demorgan(nnf);
+    // struct ast* nnf = translate($2);
+    // struct ast* demorgan_nnf = demorgan(nnf);
+    struct ast* cnf = translate($2);
 
     printf("> AST: \n");
     print_ast($2);
 
     printf("\n\n");
     printf("> Translated AST: \n");
-    print_ast(nnf);
+    print_ast(cnf);
 
-    printf("\n\n");
-    printf("> Translated AST demorgan: \n");
-    print_ast(demorgan_nnf);
+    // printf("\n\n");
+    // printf("> Translated AST demorgan: \n");
+    // print_ast(demorgan_nnf);
 
     printf("\n\n> (LaTeX): \n$$ ");
-    print_ast_latex(demorgan_nnf);
+    print_ast_latex(cnf);
     printf(" $$\n");
 
     free_ast($2);
-    free_ast(nnf);
-    free_ast(demorgan_nnf);
+    free_ast(cnf);
+    // free_ast(nnf);
+    // free_ast(demorgan_nnf);
   }
   ;
 

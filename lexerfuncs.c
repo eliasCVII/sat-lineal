@@ -26,60 +26,55 @@ struct ast *make_binary_node(NodeType type, ast *l, ast *r) {
 }
 
 struct ast *translate(struct ast *node) {
-  if (!node) {
-    return NULL;
-  }
+    if (!node) return NULL;
 
-  switch (node->type) {
-  case NODE_VAR:
-    return make_var_node(strdup(node->data.var_name));
+    switch (node->type) {
+        case NODE_VAR:
+            return make_var_node(strdup(node->data.var_name));
 
-  case NODE_NOT: {
-    struct ast *child = translate(node->data.child);
-    switch (child->type) {
-    case NODE_NOT:
-      return translate(child->data.child);
-    case NODE_AND:
-      return make_unary_node(
-          NODE_NOT,
-          make_binary_node(
-              NODE_AND,
-              make_unary_node(NODE_NOT, translate(child->data.binop.left)),
-              make_unary_node(NODE_NOT, translate(child->data.binop.right))));
-    case NODE_OR:
-      return make_binary_node(
-          NODE_AND, make_unary_node(NODE_NOT, translate(child->data.binop.left)),
-          make_unary_node(NODE_NOT, translate(child->data.binop.right)));
-    default:
-      return make_unary_node(NODE_NOT, child);
+        case NODE_NOT: {
+            struct ast *child = translate(node->data.child);
+            switch (child->type) {
+                case NODE_NOT:  // Double negation elimination
+                    return translate(child->data.child);
+                case NODE_AND:  // De Morgan: ¬(A ∧ B) → ¬A ∨ ¬B
+                    return make_binary_node(NODE_OR,
+                        translate(make_unary_node(NODE_NOT, child->data.binop.left)),
+                        translate(make_unary_node(NODE_NOT, child->data.binop.right))
+                    );
+                case NODE_OR:   // De Morgan: ¬(A ∨ B) → ¬A ∧ ¬B
+                    return make_binary_node(NODE_AND,
+                        translate(make_unary_node(NODE_NOT, child->data.binop.left)),
+                        translate(make_unary_node(NODE_NOT, child->data.binop.right))
+                    );
+                default:        // ¬A (literal)
+                    return make_unary_node(NODE_NOT, child);
+            }
+        }
+
+        case NODE_IMPLIES: {    // A → B ≡ ¬A ∨ B
+            struct ast *left = translate(node->data.binop.left);
+            struct ast *right = translate(node->data.binop.right);
+            struct ast *new_left = make_unary_node(NODE_NOT, left);
+            return distribute_OR(new_left, right);
+        }
+
+        case NODE_OR: {
+            struct ast *left = translate(node->data.binop.left);
+            struct ast *right = translate(node->data.binop.right);
+            return distribute_OR(left, right);
+        }
+
+        case NODE_AND: {
+            struct ast *left = translate(node->data.binop.left);
+            struct ast *right = translate(node->data.binop.right);
+            return make_binary_node(NODE_AND, left, right);
+        }
+
+        default:
+            fprintf(stderr, "Unexpected node type in translate\n");
+            return NULL;
     }
-  }
-
-  case NODE_IMPLIES: {
-    struct ast *left = translate(node->data.binop.left);
-    struct ast *right = translate(node->data.binop.right);
-    return make_unary_node(
-        NODE_NOT,
-        make_binary_node(NODE_AND, left, make_unary_node(NODE_NOT, right)));
-  }
-
-  case NODE_OR: {
-    struct ast *left = translate(node->data.binop.left);
-    struct ast *right = translate(node->data.binop.right);
-    return make_unary_node(
-        NODE_NOT, make_binary_node(NODE_AND, make_unary_node(NODE_NOT, left),
-                                   make_unary_node(NODE_NOT, right)));
-  }
-
-  case NODE_AND: {
-    struct ast *left = translate(node->data.binop.left);
-    struct ast *right = translate(node->data.binop.right);
-    return make_binary_node(NODE_AND, left, right);
-  }
-
-  default:
-    return NULL;
-  }
 }
 
 struct ast* demorgan(struct ast* node) {
@@ -152,6 +147,7 @@ struct ast* distribute_OR(struct ast* left, struct ast* right) {
     // Base case: both literals or ORs already handled
     return make_binary_node(NODE_OR, left, right);
 }
+
 
 struct ast* to_cnf(struct ast* node) {
     if (!node) return NULL;
