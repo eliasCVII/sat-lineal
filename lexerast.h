@@ -32,21 +32,19 @@ struct ast *make_var_node(char* name);
 struct ast *make_unary_node(NodeType type, ast* child);
 struct ast *make_binary_node(NodeType type, ast* l, ast* r);
 
-// Double Negation
-/* struct ast* simplify_negations(struct ast* node); */
-
 // Traduce AST
-struct ast* to_nnf(struct ast* node);
+struct ast* translate(struct ast* node);
 
-/* struct ast *to_simplified_nnf(struct ast* node); */
+
+struct ast* demorgan(struct ast* node);
+struct ast *distribute_OR(struct ast* left, struct ast* right);
+struct ast* to_cnf(struct ast* node);
 
 // Libera AST
 void free_ast(ast* node);
 
 // Print
 void print_ast(ast* node);
-
-// Print Latex
 void print_ast_latex(ast* node);
 
 #endif

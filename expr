@@ -1,1 +1,1 @@
-$$ (p \vee q) $$
+$$ (p \vee (\neg q \wedge r)) $$
