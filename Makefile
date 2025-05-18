@@ -1,10 +1,10 @@
-lexer: lexer.l lexer.y lexerast.h lexerfuncs.c
-	bison -d lexer.y
-	flex lexer.l
-	gcc -o lexer lexer.tab.c lex.yy.c lexerfuncs.c
+lexer: sat-lex.l sat-parser.y sat-header.h sat-funcs.c
+	bison -d sat-parser.y
+	flex sat-lex.l
+	gcc -o sat sat-parser.tab.c lex.yy.c sat-funcs.c
 
 clean:
-	rm -f lexer.tab.* lex.yy.c lexer
+	rm -f sat-parser.tab.* lex.yy.c sat
 
-test: lexer
-	./lexer < expr
+test: sat
+	./sat < expr

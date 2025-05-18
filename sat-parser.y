@@ -1,7 +1,7 @@
 %{
 #include <stdio.h>
 #include <stdlib.h>
-#include "lexerast.h"
+#include "sat-header.h"
 %}
 
 %union{

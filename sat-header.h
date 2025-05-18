@@ -27,14 +27,34 @@ typedef struct ast {
   } data;
 }ast;
 
+typedef struct Literal {
+  char* var;
+  int negated;
+} Literal;
+
+typedef struct Clause {
+  Literal* literals;
+  int count;
+} Clause;
+
+typedef struct CNF {
+  Clause* clauses;
+  int count;
+} CNF;
+
+typedef struct Assignment {
+  char** variables;
+  int* values;
+  int size;
+} Assignment;
+
 // Construye AST
 struct ast *make_var_node(char* name);
 struct ast *make_unary_node(NodeType type, ast* child);
 struct ast *make_binary_node(NodeType type, ast* l, ast* r);
 
-// Traduce AST
+// Traduce AST a CNF
 struct ast* translate(struct ast* node);
-
 
 struct ast* demorgan(struct ast* node);
 struct ast *distribute_OR(struct ast* left, struct ast* right);

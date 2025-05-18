@@ -3,7 +3,7 @@
 *.log
 tmp/
 
-lexer
-lexer.tab.*
+sat
+sat-parser.tab.*
 lex.yy.c
 

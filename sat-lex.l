@@ -1,8 +1,8 @@
 /*-*-mode: c-*-*/
 
 %{
-#include "lexer.tab.h"
-#include "lexerast.h"
+#include "sat-parser.tab.h"
+#include "sat-header.h"
 
 char atomo[2]={0};
 int yylex();
