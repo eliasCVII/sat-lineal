@@ -1,1 +1,1 @@
-$$ (p \rightarrow (q \wedge r)) $$
+$$ p \rightarrow (q \wedge (s \wedge \neg s)) $$

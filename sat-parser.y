@@ -20,30 +20,35 @@
 %%
 input:
   DELIM exp DELIM {
-    printf("\n> Valid Expression\n\n");
-    // struct ast* nnf = translate($2);
-    // struct ast* demorgan_nnf = demorgan(nnf);
-    struct ast* cnf = translate($2);
-
-    printf("> AST: \n");
-    print_ast($2);
-
-    printf("\n\n");
-    printf("> Translated AST: \n");
-    print_ast(cnf);
+    struct ast* cnf = transform($2);
+    CNF* flat_cnf = ast_to_cnf(cnf);
 
     // printf("\n\n");
-    // printf("> Translated AST demorgan: \n");
-    // print_ast(demorgan_nnf);
+    // printf("> AST: \n");
+    // print_ast($2);
+    //
+    // printf("\n\n");
+    // printf("> Translated AST: \n");
+    // print_ast(cnf);
+    //
+    // printf("\n\n> (LaTeX): \n$$ ");
+    // print_ast_latex(cnf);
+    // printf(" $$\n");
+    //
+    // printf("\n\n");
+    // print_cnf(flat_cnf);
 
-    printf("\n\n> (LaTeX): \n$$ ");
-    print_ast_latex(cnf);
-    printf(" $$\n");
+    printf("\n");
+    process_input(flat_cnf);
 
     free_ast($2);
     free_ast(cnf);
-    // free_ast(nnf);
-    // free_ast(demorgan_nnf);
+  }
+  | DELIM /* empty */ DELIM {
+    CNF* empty = malloc(sizeof(CNF));
+    empty->clauses=NULL;
+    empty->count=0;
+    process_input(empty);
   }
   ;
 
