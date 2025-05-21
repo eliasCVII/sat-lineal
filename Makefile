@@ -6,5 +6,5 @@ lexer: sat-lex.l sat-parser.y sat-header.h sat-funcs.c
 clean:
 	rm -f sat-parser.tab.* lex.yy.c sat
 
-test: sat
+test: expr
 	./sat < expr

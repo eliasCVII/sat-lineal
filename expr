@@ -1,1 +1,1 @@
-$$ p \rightarrow (q \wedge (s \wedge \neg s)) $$
+$$ p \rightarrow (q_{1} \wedge (s_{01} \vee \neg s_{23}) ) $$

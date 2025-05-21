@@ -35,20 +35,47 @@ struct ast *transform(struct ast *node) {
 
   case NODE_NOT: {
     struct ast *child = transform(node->data.child);
+    if (!child) return NULL;
+
+    struct ast *result = NULL;
+
     switch (child->type) {
-    case NODE_NOT: // Double negation elimination
-      return transform(child->data.child);
-    case NODE_AND: // De Morgan: ¬(A ∧ B) → ¬A ∨ ¬B
-      return make_binary_node(
-          NODE_OR, transform(make_unary_node(NODE_NOT, child->data.binop.left)),
-          transform(make_unary_node(NODE_NOT, child->data.binop.right)));
-    case NODE_OR: // De Morgan: ¬(A ∨ B) → ¬A ∧ ¬B
-      return make_binary_node(
-          NODE_AND,
-          transform(make_unary_node(NODE_NOT, child->data.binop.left)),
-          transform(make_unary_node(NODE_NOT, child->data.binop.right)));
+    case NODE_NOT: { // Double negation elimination
+      result = transform(child->data.child);
+      free_ast(child); // Free the temporary child node
+      return result;
+    }
+    case NODE_AND: { // De Morgan: ¬(A ∧ B) → ¬A ∨ ¬B
+      struct ast *not_left = make_unary_node(NODE_NOT, child->data.binop.left);
+      struct ast *not_right = make_unary_node(NODE_NOT, child->data.binop.right);
+      struct ast *trans_left = transform(not_left);
+      struct ast *trans_right = transform(not_right);
+
+      // Free temporary nodes
+      free_ast(not_left);
+      free_ast(not_right);
+
+      result = make_binary_node(NODE_OR, trans_left, trans_right);
+      free_ast(child);
+      return result;
+    }
+    case NODE_OR: { // De Morgan: ¬(A ∨ B) → ¬A ∧ ¬B
+      struct ast *not_left = make_unary_node(NODE_NOT, child->data.binop.left);
+      struct ast *not_right = make_unary_node(NODE_NOT, child->data.binop.right);
+      struct ast *trans_left = transform(not_left);
+      struct ast *trans_right = transform(not_right);
+
+      // Free temporary nodes
+      free_ast(not_left);
+      free_ast(not_right);
+
+      result = make_binary_node(NODE_AND, trans_left, trans_right);
+      free_ast(child);
+      return result;
+    }
     default: // ¬A (literal)
-      return make_unary_node(NODE_NOT, child);
+      result = make_unary_node(NODE_NOT, child);
+      return result;
     }
   }
 
@@ -56,13 +83,15 @@ struct ast *transform(struct ast *node) {
     struct ast *left = transform(node->data.binop.left);
     struct ast *right = transform(node->data.binop.right);
     struct ast *new_left = make_unary_node(NODE_NOT, left);
-    return distribute_OR(new_left, right);
+    struct ast *result = distribute_OR(new_left, right);
+    return result;
   }
 
   case NODE_OR: {
     struct ast *left = transform(node->data.binop.left);
     struct ast *right = transform(node->data.binop.right);
-    return distribute_OR(left, right);
+    struct ast *result = distribute_OR(left, right);
+    return result;
   }
 
   case NODE_AND: {
@@ -79,15 +108,56 @@ struct ast *transform(struct ast *node) {
 
 struct ast *distribute_OR(struct ast *left, struct ast *right) {
   if (left->type == NODE_AND) {
-    return make_binary_node(NODE_AND,
-                            distribute_OR(left->data.binop.left, right),
-                            distribute_OR(left->data.binop.right, right));
+    struct ast *dist_left = distribute_OR(left->data.binop.left, right);
+    // We need to clone right here because it will be used twice
+    struct ast *right_clone = NULL;
+
+    if (right->type == NODE_VAR) {
+      right_clone = make_var_node(strdup(right->data.var_name));
+    } else if (right->type == NODE_NOT) {
+      right_clone = make_unary_node(NODE_NOT,
+                                   right->data.child->type == NODE_VAR ?
+                                   make_var_node(strdup(right->data.child->data.var_name)) :
+                                   NULL);
+    }
+
+    struct ast *dist_right = distribute_OR(left->data.binop.right,
+                                          right_clone ? right_clone : right);
+
+    struct ast *result = make_binary_node(NODE_AND, dist_left, dist_right);
+
+    // Free the original left node since we've distributed it
+    free(left);
+
+    return result;
   }
+
   if (right->type == NODE_AND) {
-    return make_binary_node(NODE_AND,
-                            distribute_OR(left, right->data.binop.left),
-                            distribute_OR(left, right->data.binop.right));
+    struct ast *dist_left = distribute_OR(left, right->data.binop.left);
+
+    // We need to clone left here because it will be used twice
+    struct ast *left_clone = NULL;
+
+    if (left->type == NODE_VAR) {
+      left_clone = make_var_node(strdup(left->data.var_name));
+    } else if (left->type == NODE_NOT) {
+      left_clone = make_unary_node(NODE_NOT,
+                                  left->data.child->type == NODE_VAR ?
+                                  make_var_node(strdup(left->data.child->data.var_name)) :
+                                  NULL);
+    }
+
+    struct ast *dist_right = distribute_OR(left_clone ? left_clone : left,
+                                          right->data.binop.right);
+
+    struct ast *result = make_binary_node(NODE_AND, dist_left, dist_right);
+
+    // Free the original right node since we've distributed it
+    free(right);
+
+    return result;
   }
+
   return make_binary_node(NODE_OR, left, right);
 }
 
@@ -168,31 +238,31 @@ CNF *ast_to_cnf(struct ast *node) {
     cnf->clauses = malloc(cnf->count * sizeof(Clause));
 
     for (int i = 0; i < left_cnf->count; i++) {
-        Clause *src = &left_cnf->clauses[i];
-        Clause *dest = &cnf->clauses[i];
-        dest->count = src->count;
-        dest->literals = malloc(dest->count * sizeof(Literal));
-        for (int j = 0; j < src->count; j++) {
-            dest->literals[j].var = strdup(src->literals[j].var);
-            dest->literals[j].negated = src->literals[j].negated;
-        }
+      Clause *src = &left_cnf->clauses[i];
+      Clause *dest = &cnf->clauses[i];
+      dest->count = src->count;
+      dest->literals = malloc(dest->count * sizeof(Literal));
+      for (int j = 0; j < src->count; j++) {
+        dest->literals[j].var = strdup(src->literals[j].var);
+        dest->literals[j].negated = src->literals[j].negated;
+      }
     }
 
     for (int i = 0; i < right_cnf->count; i++) {
-        Clause *src = &right_cnf->clauses[i];
-        Clause *dest = &cnf->clauses[left_cnf->count + i];
-        dest->count = src->count;
-        dest->literals = malloc(dest->count * sizeof(Literal));
-        for (int j = 0; j < src->count; j++) {
-            dest->literals[j].var = strdup(src->literals[j].var);
-            dest->literals[j].negated = src->literals[j].negated;
-        }
+      Clause *src = &right_cnf->clauses[i];
+      Clause *dest = &cnf->clauses[left_cnf->count + i];
+      dest->count = src->count;
+      dest->literals = malloc(dest->count * sizeof(Literal));
+      for (int j = 0; j < src->count; j++) {
+        dest->literals[j].var = strdup(src->literals[j].var);
+        dest->literals[j].negated = src->literals[j].negated;
+      }
     }
 
     // Free the original CNFs properly
     free_cnf(left_cnf);
     free_cnf(right_cnf);
-} else if (node->type == NODE_OR) {
+  } else if (node->type == NODE_OR) {
     // Convert OR node to a single clause
     Clause *clause = malloc(sizeof(Clause));
     clause->literals = NULL;
@@ -414,7 +484,7 @@ int dpll(CNF *cnf, Assignment *assn) {
 // Solve wrapper: parse AST → CNF → DPLL → print
 void solve(CNF *cnf, Assignment *assn) {
   int res = dpll(cnf, assn);
-  printf(res ? "SAT\n" : "UNSAT\n");
+  printf(res ? "SATISFACIBLE\n" : "NO-SATISFACIBLE\n");
 }
 
 // Memory Management
@@ -564,12 +634,12 @@ void print_cnf(CNF *cnf) {
   }
 }
 
-void process_input(CNF* cnf) {
-    Assignment *assn = create_assignment();
-    solve(cnf, assn);
+void process_input(CNF *cnf) {
+  Assignment *assn = create_assignment();
+  solve(cnf, assn);
 
-    free_assignment(assn);
-    free_cnf(cnf);
+  free_assignment(assn);
+  free_cnf(cnf);
 }
 
 void yyerror(const char *msg) { fprintf(stderr, "error: %s\n", msg); }
