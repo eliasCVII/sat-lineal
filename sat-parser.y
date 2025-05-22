@@ -48,10 +48,19 @@ input:
     free_ast(cnf);
   }
   | DELIM /* empty */ DELIM {
+    // Empty input - create an empty CNF
     CNF* empty = malloc(sizeof(CNF));
-    empty->clauses=NULL;
-    empty->count=0;
+    if (!empty) {
+      fprintf(stderr, "Memory allocation error\n");
+      printf("NO-SOLUTION\n");
+      return 1;
+    }
+    empty->clauses = NULL;
+    empty->count = 0;
     process_input(empty);
+  }
+  | error {
+    // Syntax error in input - handled in yyerror
   }
   ;
 

@@ -7,9 +7,9 @@ Un SAT lineal traduce las formulas de logica proposicional utilizando el siguien
 $$ \phi ::= p | (\neg \phi) | (\phi \wedge \phi) $$
 $$T(p) = p \quad T(\neg \phi) = \neg T(\phi)$$
 $$T(\phi_1 \wedge \phi_2) = T(\phi_1) \wedge T(\phi_2) \quad T(\phi_1 \vee \phi_2) = \neg(\neg T(\phi_1) \wedge \neg T(\phi_2))$$
-$$T(\phi_1 \rightarrow \phi_2 ) = \neg (T(\phi_1) \wedge \negT(\phi_2)) $$
+$$T(\phi_1 \rightarrow \phi_2 ) = \neg (T(\phi_1) \wedge \neg T(\phi_2)) $$
 
-El procesamiento de la entrada debe realizarse con la herramienta LEX. Se deben implementar dos algoritmos: el primero para realizar la traduccion de la expresion y el segundo para determinar la satisfacibilidad. La salida del segundo programa es una de las siguientes tres frases: SATISFACIBLE, NO-SATISFACIBLE, NO-SOLUTION.
+El procesamiento de la entrada se realiza con la herramienta LEX. Se deben implementar dos algoritmos: el primero para realizar la traduccion de la expresion y el segundo para determinar la satisfacibilidad. La salida del segundo programa es una de las siguientes tres frases: SATISFACIBLE, NO-SATISFACIBLE, NO-SOLUTION.
 
 ** Compilacion
 Para compilar usamos make
@@ -27,3 +27,20 @@ Y el programa se ejecuta con
 #+begin_src shell
 make test # equivalente a ./sat < expr
 #+end_src
+** Formulas a probar
+- $$ p \vee q $$ -> SAT
+- $$ p \wedge \neg p $$ -> UNSAT
+- $$ p \rightarrow q $$ -> SAT
+- $$ (p \rightarrow q) \wedge (q \rightarrow r) \wedge (r \rightarrow s) \wedge (s \rightarrow t) \wedge \neg t \wedge p $$ -> SAT
+- $$ p_{0} \rightarrow (q_{1} \wedge (s_{01} \vee \neg s_{23})) $$ -> SAT
+- $$ (a \vee b \vee c) \wedge (d \vee e \vee f) \wedge (g \vee h \vee i) \wedge (j \vee k \vee l) \wedge (m \vee n \vee o) \wedge (p \vee q \vee r) \wedge (s \vee t \vee u) \wedge (v \vee w \vee x) \wedge (y \vee z) $$ -> SAT
+- $$ (((((p \rightarrow q) \rightarrow r) \rightarrow s) \rightarrow t) \rightarrow u) $$ -> SAT
+- $$ \neg(\neg p \vee \neg(\neg q \wedge \neg(\neg r \vee \neg s))) $$
+- $$ p \vee \neg p $$ -> SAT
+- $$ p \invalid q $$ -> NO-SOL
+- $$ ((p_{1} \wedge q_{2}) \rightarrow (r_{3} \vee s_{4})) \wedge ((t_{5} \vee u_{6}) \rightarrow (v_{7} \wedge w_{8})) \wedge \neg((x_{9} \wedge y_{10}) \vee (z_{11} \wedge a_{12})) \wedge ((b_{13} \rightarrow c_{14}) \vee (d_{15} \rightarrow e_{16})) $$
+- $$ ((a \vee b) \wedge (c \vee d)) \rightarrow ((e \vee f) \wedge (g \vee h)) $$
+- $$ (p_{11} \vee p_{12} \vee p_{13}) \wedge (p_{21} \vee p_{22} \vee p_{23}) \wedge (p_{31} \vee p_{32} \vee p_{33}) \wedge (p_{41} \vee p_{42} \vee p_{43}) \wedge (\neg p_{11} \vee \neg p_{21}) \wedge (\neg p_{11} \vee \neg p_{31}) \wedge (\neg p_{11} \vee \neg p_{41}) \wedge (\neg p_{21} \vee \neg p_{31}) \wedge (\neg p_{21} \vee \neg p_{41}) \wedge (\neg p_{31} \vee \neg p_{41}) \wedge (\neg p_{12} \vee \neg p_{22}) \wedge (\neg p_{12} \vee \neg p_{32}) \wedge (\neg p_{12} \vee \neg p_{42}) \wedge (\neg p_{22} \vee \neg p_{32}) \wedge (\neg p_{22} \vee \neg p_{42}) \wedge (\neg p_{32} \vee \neg p_{42}) \wedge (\neg p_{13} \vee \neg p_{23}) \wedge (\neg p_{13} \vee \neg p_{33}) \wedge (\neg p_{13} \vee \neg p_{43}) \wedge (\neg p_{23} \vee \neg p_{33}) \wedge (\neg p_{23} \vee \neg p_{43}) \wedge (\neg p_{33} \vee \neg p_{43}) $$
+- $$ (a \wedge b \wedge \neg c) \vee (a \wedge \neg b \wedge c) \vee (\neg a \wedge b \wedge c) \vee (a \wedge b \wedge c) $$
+- $$ (p_1 \rightarrow p_2) \wedge (p_2 \rightarrow p_3) \wedge (p_3 \rightarrow p_4) \wedge (p_4 \rightarrow p_5) \wedge (p_5 \rightarrow p_6) \wedge (p_6 \rightarrow p_7) \wedge (p_7 \rightarrow p_8) \wedge (p_8 \rightarrow p_9) \wedge (p_9 \rightarrow p_{10}) \wedge (p_{10} \rightarrow p_{11}) \wedge (p_{11} \rightarrow p_{12}) \wedge (p_{12} \rightarrow p_{13}) \wedge (p_{13} \rightarrow p_{14}) \wedge (p_{14} \rightarrow p_{15}) \wedge (p_{15} \rightarrow p_{16}) \wedge (p_{16} \rightarrow p_{17}) \wedge (p_{17} \rightarrow p_{18}) \wedge (p_{18} \rightarrow p_{19}) \wedge (p_{19} \rightarrow p_{20}) \wedge p_1 \wedge \neg p_{20} $$
+- $$ ((a \vee b) \wedge (c \vee d)) \rightarrow ((e \vee f) \wedge (g \vee h)) \wedge \neg(((i \vee j) \wedge (k \vee l)) \rightarrow ((m \vee n) \wedge (o \vee p))) \wedge (q \rightarrow (r \rightarrow (s \rightarrow (t \rightarrow u)))) \wedge (v \wedge \neg v) $$

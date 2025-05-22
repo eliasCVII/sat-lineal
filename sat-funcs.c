@@ -635,6 +635,30 @@ void print_cnf(CNF *cnf) {
 }
 
 void process_input(CNF *cnf) {
+  // Check for invalid or malformed CNF
+  if (!cnf || cnf->count < 0) {
+    printf("NO-SOLUTION\n");
+    if (cnf) free_cnf(cnf);
+    return;
+  }
+
+  // Check for empty CNF (no clauses)
+  if (cnf->count == 0) {
+    printf("SATISFACIBLE\n"); // Empty CNF is trivially satisfiable
+    free_cnf(cnf);
+    return;
+  }
+
+  // Check for invalid clauses
+  for (int i = 0; i < cnf->count; i++) {
+    if (cnf->clauses[i].count < 0) {
+      printf("NO-SOLUTION\n");
+      free_cnf(cnf);
+      return;
+    }
+  }
+
+  // Normal processing
   Assignment *assn = create_assignment();
   solve(cnf, assn);
 
@@ -642,11 +666,27 @@ void process_input(CNF *cnf) {
   free_cnf(cnf);
 }
 
-void yyerror(const char *msg) { fprintf(stderr, "error: %s\n", msg); }
+// Global flag to track syntax errors
+int syntax_error_occurred = 0;
+
+void yyerror(const char *msg) {
+  fprintf(stderr, "error: %s\n", msg);
+  syntax_error_occurred = 1;
+}
 
 int main(int argc, char **argv) {
   printf("> ");
+
+  // Reset the syntax error flag
+  syntax_error_occurred = 0;
+
   int result = yyparse();
+
+  // Check if a syntax error occurred during parsing
+  if (syntax_error_occurred) {
+    printf("\nNO-SOLUTION\n");
+  }
+
   yylex_destroy();
   return result;
 }

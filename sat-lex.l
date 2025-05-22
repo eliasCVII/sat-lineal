@@ -9,6 +9,9 @@
 char atomo[100]={0}; /* Increased buffer size to handle subscripts */
 int yylex();
 
+/* External declaration for the syntax error flag */
+extern int syntax_error_occurred;
+
 /* Helper function to process subscripted variables */
 char* process_subscript(const char* base, const char* subscript) {
     char* result = malloc(strlen(base) + strlen(subscript) + 4); /* +4 for "_{}" and null terminator */
@@ -79,7 +82,10 @@ char* process_subscript(const char* base, const char* subscript) {
 [ \t\n]          ;
 
  /* Error for any other character */
-.                { fprintf(stderr, "ERROR: Invalid token '%s'\n", yytext);
-}
+.                {
+                  fprintf(stderr, "ERROR: Invalid token '%s'\n", yytext);
+                  syntax_error_occurred = 1;
+                  return 0;  /* Return 0 to signal an error */
+                }
 
 %%
