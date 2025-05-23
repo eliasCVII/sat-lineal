@@ -1,0 +1,1 @@
+$$ ((p_{1} \wedge q_{2}) \rightarrow (r_{3} \vee s_{4})) \wedge ((t_{5} \vee u_{6}) \rightarrow (v_{7} \wedge w_{8})) \wedge \neg((x_{9} \wedge y_{10}) \vee (z_{11} \wedge a_{12})) \wedge ((b_{13} \rightarrow c_{14}) \vee (d_{15} \rightarrow e_{16})) $$

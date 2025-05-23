@@ -1,0 +1,1 @@
+$$ ((a \vee b) \wedge (c \vee d)) \rightarrow ((e \vee f) \wedge (g \vee h)) $$

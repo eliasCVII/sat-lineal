@@ -1,0 +1,1 @@
+$$ ((a \vee b) \wedge (c \vee d)) \rightarrow ((e \vee f) \wedge (g \vee h)) \wedge \neg(((i \vee j) \wedge (k \vee l)) \rightarrow ((m \vee n) \wedge (o \vee p))) \wedge (q \rightarrow (r \rightarrow (s \rightarrow (t \rightarrow u)))) \wedge (v \wedge \neg v) $$
