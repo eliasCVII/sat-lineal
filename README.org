@@ -1,0 +1,29 @@
+#+title: Readme
+
+* Descripcion
+Implementar en lenguaje C el algoritmo para determinar si una expresion descrita en logica proposicional es satisfacible (SAT lineal).
+Un SAT lineal traduce las formulas de logica proposicional utilizando el siguiente esquema:
+
+$$ \phi ::= p | (\neg \phi) | (\phi \wedge \phi) $$
+$$T(p) = p \quad T(\neg \phi) = \neg T(\phi)$$
+$$T(\phi_1 \wedge \phi_2) = T(\phi_1) \wedge T(\phi_2) \quad T(\phi_1 \vee \phi_2) = \neg(\neg T(\phi_1) \wedge \neg T(\phi_2))$$
+$$T(\phi_1 \rightarrow \phi_2 ) = \neg (T(\phi_1) \wedge \neg T(\phi_2)) $$
+
+El procesamiento de la entrada se realiza con la herramienta LEX. Se deben implementar dos algoritmos: el primero para realizar la traduccion de la expresion y el segundo para determinar la satisfacibilidad. La salida del segundo programa es una de las siguientes tres frases: ~SATISFACIBLE~, ~NO-SATISFACIBLE~ o ~NO-SOLUTION~.
+
+** Compilacion
+Para compilar usamos make
+#+begin_src shell
+make
+#+end_src
+
+** Uso
+La expresion latex va en el archivo ~expresion.txt~ en el directorio raíz del proyecto
+#+begin_src latex
+$$ p \vee q_{1} $$
+#+end_src
+
+Y el programa se ejecuta con
+#+begin_src shell
+make test # equivalente a ./tarea1.exe < expresion.txt
+#+end_src

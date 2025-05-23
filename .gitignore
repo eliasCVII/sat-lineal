@@ -1,0 +1,8 @@
+.DS_Store
+.idea
+.editorconfig
+*.log
+tmp/
+
+lex.yy.c
+tarea1.exe
