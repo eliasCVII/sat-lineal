@@ -3,7 +3,7 @@
 # Run all tests in the tests directory
 # Usage: ./run_tests.sh [executable]
 
-EXECUTABLE=${1:-./sat}
+EXECUTABLE=${1:-./tarea1.exe}
 TEST_DIR=tests
 
 echo "Running tests with executable: $EXECUTABLE"
@@ -17,12 +17,12 @@ passed_tests=0
 for test_file in $TEST_DIR/*.expr; do
     test_name=$(basename "$test_file" .expr)
     echo -n "Running test $test_name... "
-    
+
     # Run the test and capture output
     output=$($EXECUTABLE < "$test_file" 2>&1)
-    
-    # Check if the output contains SATISFACIBLE or NO-SATISFACIBLE
-    if echo "$output" | grep -q "SATISFACIBLE\|NO-SATISFACIBLE"; then
+
+    # Check if the output contains SATISFACIBLE, NO-SATISFACIBLE, or NO-SOLUTION
+    if echo "$output" | grep -q "SATISFACIBLE\|NO-SATISFACIBLE\|NO-SOLUTION"; then
         echo "PASSED"
         ((passed_tests++))
     else

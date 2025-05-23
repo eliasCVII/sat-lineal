@@ -16,7 +16,7 @@ test: tarea1.exe
 
 # Run all tests
 test-all: tarea1.exe
-	cd .. && ./run_tests.sh sat/tarea1.exe
+	./run_tests.sh ./tarea1.exe
 
 # Run tests with Valgrind to check for memory leaks
 test-valgrind: tarea1.exe
