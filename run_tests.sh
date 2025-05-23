@@ -1,34 +1,50 @@
 #!/bin/bash
 
 # Run all tests in the tests directory
-# Usage: ./run_tests.sh [executable]
+# Usage: ./run_tests.sh [executable] [--show-input]
 
 EXECUTABLE=${1:-./tarea1.exe}
 TEST_DIR=tests
+SHOW_INPUT=0
+
+# Check if --show-input flag is provided
+if [ "$2" = "--show-input" ]; then
+    SHOW_INPUT=1
+fi
 
 echo "Running tests with executable: $EXECUTABLE"
 echo "----------------------------------------"
 
 # Count tests
-total_tests=$(ls $TEST_DIR/*.expr | wc -l)
+total_tests=$(ls $TEST_DIR/*.txt | wc -l)
 passed_tests=0
 
 # Run each test
-for test_file in $TEST_DIR/*.expr; do
-    test_name=$(basename "$test_file" .expr)
-    echo -n "Running test $test_name... "
+for test_file in $TEST_DIR/*.txt; do
+    test_name=$(basename "$test_file" .txt)
+    echo "Running test $test_name..."
+
+    # Display input expression if requested
+    if [ $SHOW_INPUT -eq 1 ]; then
+        echo "Input expression:"
+        echo "----------------"
+        cat "$test_file"
+        echo "----------------"
+    fi
 
     # Run the test and capture output
+    echo -n "Solver output: "
     output=$($EXECUTABLE < "$test_file" 2>&1)
+    echo "$output"
 
     # Check if the output contains SATISFACIBLE, NO-SATISFACIBLE, or NO-SOLUTION
     if echo "$output" | grep -q "SATISFACIBLE\|NO-SATISFACIBLE\|NO-SOLUTION"; then
-        echo "PASSED"
+        echo "Test result: PASSED"
         ((passed_tests++))
     else
-        echo "FAILED"
-        echo "Output: $output"
+        echo "Test result: FAILED"
     fi
+    echo ""
 done
 
 echo "----------------------------------------"

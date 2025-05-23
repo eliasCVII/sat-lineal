@@ -6,7 +6,6 @@
  */
 
 #include "ast.h"
-#include "cnf.h"
 
 /* Token definitions - must match those in the lexer */
 #define TOKEN_DELIM    1
@@ -24,7 +23,6 @@ extern char* yylval_atomo;  /* Current token value */
 extern void free_current_token();  /* Function to free the current token */
 
 /* Parser functions */
-int yyparse();  /* Main parsing function */
 void yyerror(const char *msg);  /* Error reporting function */
 
 /* Recursive descent parser functions */
@@ -34,7 +32,7 @@ struct ast* parse_or_exp();
 struct ast* parse_and_exp();
 struct ast* parse_not_exp();
 
-/* Process the parsed input */
-void process_input(CNF* cnf);
+/* Parse input for the solver */
+struct ast* parse_input_linear();
 
 #endif /* PARSER_H */

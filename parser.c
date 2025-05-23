@@ -157,8 +157,8 @@ struct ast* parse_not_exp() {
     }
 }
 
-/* Parse the input according to the grammar */
-int parse_input() {
+/* Parse the input for the solver */
+struct ast* parse_input_linear() {
     /* Initialize error flag */
     syntax_error_occurred = 0;
 
@@ -168,25 +168,13 @@ int parse_input() {
     /* Check for the opening delimiter */
     if (!match(TOKEN_DELIM)) {
         syntax_error("Expected opening delimiter ($$)");
-        return 1;
+        return NULL;
     }
 
     /* Check for empty input */
     if (current_token == TOKEN_DELIM) {
         next_token();
-
-        /* Empty input - create an empty CNF */
-        CNF* empty = malloc(sizeof(CNF));
-        if (!empty) {
-            fprintf(stderr, "Memory allocation error\n");
-            printf("NO-SOLUTION\n");
-            return 1;
-        }
-        empty->clauses = NULL;
-        empty->count = 0;
-        process_input(empty);
-
-        return 0;
+        return NULL; /* Empty input */
     }
 
     /* Parse the expression */
@@ -196,50 +184,14 @@ int parse_input() {
     if (!match(TOKEN_DELIM)) {
         syntax_error("Expected closing delimiter ($$)");
         if (ast_root) free_ast(ast_root);
-        return 1;
+        return NULL;
     }
 
     /* Check for syntax errors */
     if (syntax_error_occurred || !ast_root) {
         if (ast_root) free_ast(ast_root);
-        return 1;
+        return NULL;
     }
 
-    /* Transform the AST to CNF using our safe transform function */
-    struct ast* cnf = safe_transform(ast_root);
-    free_ast(ast_root); /* Free the original AST */
-
-    if (!cnf) {
-        fprintf(stderr, "Error transforming AST to CNF\n");
-        printf("NO-SOLUTION\n");
-        return 1;
-    }
-
-    CNF* flat_cnf = ast_to_cnf(cnf);
-
-    if (!flat_cnf) {
-        fprintf(stderr, "Error flattening CNF\n");
-        free_ast(cnf);
-        printf("NO-SOLUTION\n");
-        return 1;
-    }
-
-    printf("\n");
-    process_input(flat_cnf);
-
-    /* Note: process_input frees flat_cnf, so we don't need to free it here */
-    /* We need to free the CNF AST as it's a separate structure from flat_cnf */
-    free_ast(cnf);
-
-    return 0;
-}
-
-/* Entry point - replaces yyparse() */
-int yyparse() {
-    int result = parse_input();
-
-    /* Make sure to free any remaining token */
-    free_current_token();
-
-    return result;
+    return ast_root;
 }

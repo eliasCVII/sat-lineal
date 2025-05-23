@@ -1,11 +1,12 @@
 #include "common.h"
 #include "parser.h"
-#include "cnf.h"
-#include "solver.h"
+#include "linear_solver.h"
+#include "ast.h"
 #include <stdio.h>
+#include <stdlib.h>
 
 /**
- * main.c - Program entry point
+ * main.c - Program entry point for the SAT solver using linear-time algorithm
  */
 
 /* Global variable for tracking syntax errors */
@@ -18,44 +19,43 @@ void yyerror(const char *msg) {
 }
 
 /* Process the parsed input */
-void process_input(CNF *cnf) {
-  if (!cnf || cnf->count < 0) {
+void process_input(ast *formula) {
+  if (!formula) {
     printf("NO-SOLUTION\n");
-    if (cnf) free_cnf(cnf);
     return;
   }
 
-  if (cnf->count == 0) {
-    printf("SATISFACIBLE\n");
-    free_cnf(cnf);
-    return;
-  }
+  /* Create assignment structure */
+  LinearAssignment *assn = create_linear_assignment();
 
-  for (int i = 0; i < cnf->count; i++) {
-    if (cnf->clauses[i].count < 0) {
-      printf("NO-SOLUTION\n");
-      free_cnf(cnf);
-      return;
-    }
-  }
+  /* Solve using linear solver */
+  int result = linear_solve(formula, assn);
 
-  Assignment *assn = create_assignment();
-  solve(cnf, assn);
+  /* Print result */
+  printf(result ? "SATISFACIBLE\n" : "NO-SATISFACIBLE\n");
 
-  free_assignment(assn);
-  free_cnf(cnf);
+  /* Free resources */
+  free_linear_assignment(assn);
+  free_ast(formula);
 }
 
 /* Main function */
 int main(int argc, char **argv) {
   syntax_error_occurred = 0;
 
-  int result = yyparse();
+  /* Parse input */
+  ast *formula = parse_input_linear();
+
+  // print_ast(formula);
 
   if (syntax_error_occurred) {
-    printf("\nNO-SOLUTION\n");
+    printf("NO-SOLUTION\n");
+    if (formula) free_ast(formula);
+  } else {
+    /* Process the parsed formula */
+    process_input(formula);
   }
 
   yylex_destroy();
-  return result;
+  return 0;
 }
