@@ -21,26 +21,11 @@
 %%
 input:
   DELIM exp DELIM {
-    // We'll skip printing the original AST to avoid memory issues
-    // The original AST is already printed by the lexer/parser during parsing
 
     // Transform the AST to CNF
     struct ast* cnf = transform($2);
     free_ast($2); // Free the original AST
     CNF* flat_cnf = ast_to_cnf(cnf);
-
-    // Skip printing the original AST
-
-    // printf("\n\n");
-    // printf("> Translated AST: \n");
-    // print_ast(cnf);
-
-    // printf("\n\n> (LaTeX): \n$$ ");
-    // print_ast_latex(cnf);
-    // printf(" $$\n");
-
-    // printf("\n\n");
-    // print_cnf(flat_cnf);
 
     printf("\n");
     process_input(flat_cnf);

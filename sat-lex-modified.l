@@ -1,16 +1,37 @@
 /*-*-mode: c-*-*/
 
 %{
-#include "sat-parser.tab.h"
 #include "sat-header.h"
 #include <string.h>
 #include <stdlib.h>
+
+/* Token definitions - must match those in the C parser */
+#define TOKEN_DELIM    1
+#define TOKEN_IMPLIES  2
+#define TOKEN_OR       3
+#define TOKEN_AND      4
+#define TOKEN_NOT      5
+#define TOKEN_LPAREN   6
+#define TOKEN_RPAREN   7
+#define TOKEN_VAR      8
+#define TOKEN_ERROR    0
 
 char atomo[100]={0}; /* Increased buffer size to handle subscripts */
 int yylex();
 
 /* External declaration for the syntax error flag */
 extern int syntax_error_occurred;
+
+/* Variable to store the current token's value */
+char* yylval_atomo = NULL;
+
+/* Function to free the current token value */
+void free_current_token() {
+    if (yylval_atomo) {
+        free(yylval_atomo);
+        yylval_atomo = NULL;
+    }
+}
 
 /* Helper function to process subscripted variables */
 char* process_subscript(const char* base, const char* subscript) {
@@ -31,13 +52,13 @@ char* process_subscript(const char* base, const char* subscript) {
 
 %%
 
-\$\$             { return DELIM; }
-\\rightarrow     { return IMPLIES; }
-\\vee            { return OR; }
-\\wedge          { return AND; }
-\\neg            { return NOT; }
-"("              { return LPAREN;}
-")"              { return RPAREN;}
+\$\$             { return TOKEN_DELIM; }
+\\rightarrow     { return TOKEN_IMPLIES; }
+\\vee            { return TOKEN_OR; }
+\\wedge          { return TOKEN_AND; }
+\\neg            { return TOKEN_NOT; }
+"("              { return TOKEN_LPAREN;}
+")"              { return TOKEN_RPAREN;}
 
  /* Match a variable followed by a subscript */
 [a-zA-Z0-9]"_{"[a-zA-Z0-9]+"}" {
@@ -62,18 +83,18 @@ char* process_subscript(const char* base, const char* subscript) {
         YY_FATAL_ERROR("out of memory");
     }
 
-    yylval.atomo = var_name; /* No need to strdup, process_subscript already allocates memory */
-    return VAR;
+    yylval_atomo = var_name; /* No need to strdup, process_subscript already allocates memory */
+    return TOKEN_VAR;
 }
 
- /* Match a simple variable (for backward compatibility) */
+    /* Match a simple variable (for backward compatibility) */
 [a-zA-Z0-9]      {
-                  yylval.atomo = strdup(yytext);
-                  if (!yylval.atomo) {
+                  yylval_atomo = strdup(yytext);
+                  if (!yylval_atomo) {
                           fprintf(stderr, "Memory allocation error\n");
                           YY_FATAL_ERROR("out of memory");
                   }
-                  return VAR;
+                  return TOKEN_VAR;
                 }
 
  /* Ignore whitespace */
@@ -83,7 +104,7 @@ char* process_subscript(const char* base, const char* subscript) {
 .                {
                   fprintf(stderr, "ERROR: Invalid token '%s'\n", yytext);
                   syntax_error_occurred = 1;
-                  return 0;  /* Return 0 to signal an error */
+                  return TOKEN_ERROR;  /* Return 0 to signal an error */
                 }
 
 %%

@@ -40,18 +40,17 @@ struct ast *transform(struct ast *node) {
     struct ast *result = NULL;
 
     switch (child->type) {
-    case NODE_NOT: { // Double negation elimination
+    case NODE_NOT: {
       result = transform(child->data.child);
-      free_ast(child); // Free the temporary child node
+      free_ast(child);
       return result;
     }
-    case NODE_AND: { // De Morgan: ¬(A ∧ B) → ¬A ∨ ¬B
+    case NODE_AND: {
       struct ast *not_left = make_unary_node(NODE_NOT, child->data.binop.left);
       struct ast *not_right = make_unary_node(NODE_NOT, child->data.binop.right);
       struct ast *trans_left = transform(not_left);
       struct ast *trans_right = transform(not_right);
 
-      // Free temporary nodes
       free_ast(not_left);
       free_ast(not_right);
 
@@ -59,13 +58,12 @@ struct ast *transform(struct ast *node) {
       free_ast(child);
       return result;
     }
-    case NODE_OR: { // De Morgan: ¬(A ∨ B) → ¬A ∧ ¬B
+    case NODE_OR: {
       struct ast *not_left = make_unary_node(NODE_NOT, child->data.binop.left);
       struct ast *not_right = make_unary_node(NODE_NOT, child->data.binop.right);
       struct ast *trans_left = transform(not_left);
       struct ast *trans_right = transform(not_right);
 
-      // Free temporary nodes
       free_ast(not_left);
       free_ast(not_right);
 
@@ -73,13 +71,13 @@ struct ast *transform(struct ast *node) {
       free_ast(child);
       return result;
     }
-    default: // ¬A (literal)
+    default:
       result = make_unary_node(NODE_NOT, child);
       return result;
     }
   }
 
-  case NODE_IMPLIES: { // A → B ≡ ¬A ∨ B
+  case NODE_IMPLIES: {
     struct ast *left = transform(node->data.binop.left);
     struct ast *right = transform(node->data.binop.right);
     struct ast *new_left = make_unary_node(NODE_NOT, left);
@@ -109,7 +107,6 @@ struct ast *transform(struct ast *node) {
 struct ast *distribute_OR(struct ast *left, struct ast *right) {
   if (left->type == NODE_AND) {
     struct ast *dist_left = distribute_OR(left->data.binop.left, right);
-    // We need to clone right here because it will be used twice
     struct ast *right_clone = NULL;
 
     if (right->type == NODE_VAR) {
@@ -126,7 +123,6 @@ struct ast *distribute_OR(struct ast *left, struct ast *right) {
 
     struct ast *result = make_binary_node(NODE_AND, dist_left, dist_right);
 
-    // Free the original left node since we've distributed it
     free(left);
 
     return result;
@@ -135,7 +131,6 @@ struct ast *distribute_OR(struct ast *left, struct ast *right) {
   if (right->type == NODE_AND) {
     struct ast *dist_left = distribute_OR(left, right->data.binop.left);
 
-    // We need to clone left here because it will be used twice
     struct ast *left_clone = NULL;
 
     if (left->type == NODE_VAR) {
@@ -152,7 +147,6 @@ struct ast *distribute_OR(struct ast *left, struct ast *right) {
 
     struct ast *result = make_binary_node(NODE_AND, dist_left, dist_right);
 
-    // Free the original right node since we've distributed it
     free(right);
 
     return result;
@@ -177,11 +171,11 @@ Literal *ast_to_literal(struct ast *node) {
       lit->var = strdup(child->data.var_name);
     } else {
       free(lit);
-      return NULL; // Invalid structure (e.g., ¬(A ∧ B))
+      return NULL;
     }
   } else {
     free(lit);
-    return NULL; // Not a literal
+    return NULL;
   }
   return lit;
 }
@@ -190,7 +184,6 @@ void flatten_or(struct ast *node, Clause *clause) {
   if (!node || node->type != NODE_OR)
     return;
 
-  // Process left child
   if (node->data.binop.left->type == NODE_OR) {
     flatten_or(node->data.binop.left, clause);
   } else {
@@ -198,7 +191,6 @@ void flatten_or(struct ast *node, Clause *clause) {
     if (lit) {
       clause->literals =
           realloc(clause->literals, (clause->count + 1) * sizeof(Literal));
-      // Deep copy the literal
       clause->literals[clause->count].var = strdup(lit->var);
       clause->literals[clause->count].negated = lit->negated;
       clause->count++;
@@ -206,7 +198,6 @@ void flatten_or(struct ast *node, Clause *clause) {
     }
   }
 
-  // Process right child (similar to left)
   if (node->data.binop.right->type == NODE_OR) {
     flatten_or(node->data.binop.right, clause);
   } else {
@@ -259,11 +250,9 @@ CNF *ast_to_cnf(struct ast *node) {
       }
     }
 
-    // Free the original CNFs properly
     free_cnf(left_cnf);
     free_cnf(right_cnf);
   } else if (node->type == NODE_OR) {
-    // Convert OR node to a single clause
     Clause *clause = malloc(sizeof(Clause));
     clause->literals = NULL;
     clause->count = 0;
@@ -274,13 +263,12 @@ CNF *ast_to_cnf(struct ast *node) {
     cnf->clauses[0] = *clause;
     free(clause);
   } else {
-    // Single literal (VAR or NOT)
     Literal *lit = ast_to_literal(node);
     if (lit) {
       Clause *clause = malloc(sizeof(Clause));
       clause->count = 1;
       clause->literals = malloc(sizeof(Literal));
-      clause->literals[0].var = strdup(lit->var); // Deep copy
+      clause->literals[0].var = strdup(lit->var);
       clause->literals[0].negated = lit->negated;
 
       cnf->count = 1;
@@ -288,14 +276,13 @@ CNF *ast_to_cnf(struct ast *node) {
       cnf->clauses[0] = *clause;
 
       free_literal(lit);
-      free(clause); // Only free the container, not the literals
+      free(clause);
     }
   }
 
   return cnf;
 }
 
-// Assignment Management
 Assignment *create_assignment() {
   Assignment *assn = malloc(sizeof(Assignment));
   assn->variables = NULL;
@@ -305,7 +292,6 @@ Assignment *create_assignment() {
 }
 
 void assign_variable(Assignment *assn, char *var, int value) {
-  // Check for existing assignment
   for (int i = 0; i < assn->size; i++) {
     if (strcmp(assn->variables[i], var) == 0) {
       assn->values[i] = value;
@@ -313,7 +299,6 @@ void assign_variable(Assignment *assn, char *var, int value) {
     }
   }
 
-  // Add new variable
   assn->size++;
   assn->variables = realloc(assn->variables, assn->size * sizeof(char *));
   assn->values = realloc(assn->values, assn->size * sizeof(int));
@@ -327,7 +312,7 @@ int get_variable_value(Assignment *assn, char *var) {
       return assn->values[i];
     }
   }
-  return -1; // Not assigned
+  return -1;
 }
 
 void free_assignment(Assignment *assn) {
@@ -341,7 +326,6 @@ void free_assignment(Assignment *assn) {
   }
 }
 
-// CNF Evaluation
 int evaluate_clause(Clause *clause, Assignment *assn) {
   int has_unassigned = 0;
   for (int i = 0; i < clause->count; i++) {
@@ -354,7 +338,7 @@ int evaluate_clause(Clause *clause, Assignment *assn) {
     }
 
     if (value != lit.negated) {
-      return 1; // Clause satisfied
+      return 1;
     }
   }
   return has_unassigned ? -1 : 0;
@@ -364,14 +348,13 @@ int evaluate_cnf(CNF *cnf, Assignment *assn) {
   for (int i = 0; i < cnf->count; i++) {
     int result = evaluate_clause(&cnf->clauses[i], assn);
     if (result == 0)
-      return 0; // Unsatisfied clause
+      return 0;
     if (result == -1)
-      return -1; // Undecided
+      return -1;
   }
-  return 1; // All clauses satisfied
+  return 1;
 }
 
-// Unit Propagation
 int find_forced_assignments(CNF *cnf, Assignment *assn, Assignment *forced) {
   for (int i = 0; i < cnf->count; i++) {
     Clause *clause = &cnf->clauses[i];
@@ -379,7 +362,6 @@ int find_forced_assignments(CNF *cnf, Assignment *assn, Assignment *forced) {
     Literal *unit_literal = NULL;
     int clause_satisfied = 0;
 
-    // Check clause status
     for (int j = 0; j < clause->count; j++) {
       Literal lit = clause->literals[j];
       int value = get_variable_value(assn, lit.var);
@@ -397,19 +379,16 @@ int find_forced_assignments(CNF *cnf, Assignment *assn, Assignment *forced) {
       continue;
 
     if (unassigned_count == 0) {
-      return 0; // Conflict
+      return 0;
     } else if (unassigned_count == 1) {
-      // Found unit clause
       Literal lit = *unit_literal;
       int required_value = lit.negated ? 0 : 1;
 
-      // Check for conflicts
       int current_value = get_variable_value(assn, lit.var);
       if (current_value != -1 && current_value != required_value) {
         return 0;
       }
 
-      // Add to forced assignments
       int existing = get_variable_value(forced, lit.var);
       if (existing == -1) {
         assign_variable(forced, lit.var, required_value);
@@ -421,8 +400,6 @@ int find_forced_assignments(CNF *cnf, Assignment *assn, Assignment *forced) {
   return 1;
 }
 
-// DPLL recursion
-// Make a deep copy of the assignment
 Assignment *copy_assignment(Assignment *orig) {
   Assignment *c = create_assignment();
   for (int i = 0; i < orig->size; i++)
@@ -430,7 +407,6 @@ Assignment *copy_assignment(Assignment *orig) {
   return c;
 }
 
-// Pick first unassigned variable found in CNF
 char *pick_unassigned(CNF *cnf, Assignment *assn) {
   for (int i = 0; i < cnf->count; i++) {
     for (int j = 0; j < cnf->clauses[i].count; j++) {
@@ -452,7 +428,6 @@ int dpll(CNF *cnf, Assignment *assn) {
   if (ev == 0)
     return 0;
 
-  // unit-propagation
   Assignment *forced = create_assignment();
   if (!find_forced_assignments(cnf, assn, forced)) {
     free_assignment(forced);
@@ -462,12 +437,10 @@ int dpll(CNF *cnf, Assignment *assn) {
     assign_variable(assn, forced->variables[i], forced->values[i]);
   free_assignment(forced);
 
-  // choose variable
   char *var = pick_unassigned(cnf, assn);
   if (!var)
-    return 1; // no var left ⇒ all satisfied
+    return 1;
 
-  // branch on var = true / false
   for (int val = 1; val >= 0; val--) {
     Assignment *as2 = copy_assignment(assn);
     assign_variable(as2, var, val);
@@ -481,13 +454,11 @@ int dpll(CNF *cnf, Assignment *assn) {
   return 0;
 }
 
-// Solve wrapper: parse AST → CNF → DPLL → print
 void solve(CNF *cnf, Assignment *assn) {
   int res = dpll(cnf, assn);
   printf(res ? "SATISFACIBLE\n" : "NO-SATISFACIBLE\n");
 }
 
-// Memory Management
 void free_ast(ast *node) {
   if (!node)
     return;
@@ -520,16 +491,15 @@ void free_literal(Literal *lit) {
 void free_clause(Clause *clause) {
   if (clause) {
     for (int i = 0; i < clause->count; i++) {
-      free(clause->literals[i].var); // Free each literal's string
+      free(clause->literals[i].var);
     }
-    free(clause->literals); // Free the literals array
+    free(clause->literals);
   }
 }
 
 void free_cnf(CNF *cnf) {
   if (cnf) {
     for (int i = 0; i < cnf->count; i++) {
-      // Free each literal's var string
       for (int j = 0; j < cnf->clauses[i].count; j++) {
         free(cnf->clauses[i].literals[j].var);
       }
@@ -540,7 +510,6 @@ void free_cnf(CNF *cnf) {
   }
 }
 
-// Printing
 void print_ast(ast *node) {
   if (!node)
     return;
@@ -635,21 +604,18 @@ void print_cnf(CNF *cnf) {
 }
 
 void process_input(CNF *cnf) {
-  // Check for invalid or malformed CNF
   if (!cnf || cnf->count < 0) {
     printf("NO-SOLUTION\n");
     if (cnf) free_cnf(cnf);
     return;
   }
 
-  // Check for empty CNF (no clauses)
   if (cnf->count == 0) {
-    printf("SATISFACIBLE\n"); // Empty CNF is trivially satisfiable
+    printf("SATISFACIBLE\n");
     free_cnf(cnf);
     return;
   }
 
-  // Check for invalid clauses
   for (int i = 0; i < cnf->count; i++) {
     if (cnf->clauses[i].count < 0) {
       printf("NO-SOLUTION\n");
@@ -658,7 +624,6 @@ void process_input(CNF *cnf) {
     }
   }
 
-  // Normal processing
   Assignment *assn = create_assignment();
   solve(cnf, assn);
 
@@ -666,7 +631,7 @@ void process_input(CNF *cnf) {
   free_cnf(cnf);
 }
 
-// Global flag to track syntax errors
+/* Global variable for tracking syntax errors */
 int syntax_error_occurred = 0;
 
 void yyerror(const char *msg) {
@@ -675,14 +640,12 @@ void yyerror(const char *msg) {
 }
 
 int main(int argc, char **argv) {
-  printf("> ");
+  // printf("> ");
 
-  // Reset the syntax error flag
   syntax_error_occurred = 0;
 
   int result = yyparse();
 
-  // Check if a syntax error occurred during parsing
   if (syntax_error_occurred) {
     printf("\nNO-SOLUTION\n");
   }
