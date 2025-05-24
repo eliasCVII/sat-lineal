@@ -1,39 +1,41 @@
 #ifndef LINEAR_SOLVER_H
 #define LINEAR_SOLVER_H
 
-/**
- * linear_solver.h - Linear-time SAT solver using DAG representation
+/*
+ *
+ * linear_solver.h: Interfaz para el solucionador de SAT lineal
+ *
  */
 
 #include "ast.h"
 
-/* Constraint values for nodes */
+/* 
+ * 
+ * Valores de las restricciones para los nodos
+ *
+ */
 typedef enum {
     UNCONSTRAINED = 0,
     TRUE = 1,
     FALSE = 2,
-    CONFLICT = 3  /* Both TRUE and FALSE - indicates unsatisfiability */
+    CONFLICT = 3  // Ambos son TRUE y FALSE -> Contradiccion
 } Constraint;
 
-/* DAG node structure */
 typedef struct DAGNode {
-    NodeType type;           /* Type of node (VAR, NOT, AND, OR, IMPLIES) */
-    Constraint constraint;   /* Current constraint (TRUE, FALSE, UNCONSTRAINED) */
-    unsigned long hash;      /* Hash value for node sharing */
-
+    NodeType type;
+    Constraint constraint;
+    unsigned long hash; // Valor de hash para compartir nodos
     union {
-        char *var_name;      /* For variable nodes */
-        struct DAGNode *child;  /* For unary operators (NOT) */
+        char *var_name;
+        struct DAGNode *child;
         struct {
-            struct DAGNode *left;   /* Left operand for binary operators */
-            struct DAGNode *right;  /* Right operand for binary operators */
+            struct DAGNode *left;
+            struct DAGNode *right;
         } binop;
     } data;
-
-    /* For constraint propagation */
-    struct DAGNode **parents;  /* Array of parent nodes */
-    int parent_count;         /* Number of parent nodes */
-    int parent_capacity;      /* Capacity of parents array */
+    struct DAGNode **parents; // Arreglo de nodos padres
+    int parent_count;
+    int parent_capacity;
 } DAGNode;
 
 /* Hash table for node sharing */
@@ -57,7 +59,11 @@ typedef struct LinearAssignment {
     int size;                /* Number of variables */
 } LinearAssignment;
 
-/* DAG construction functions */
+/*
+ *
+ * Funciones para construccion del grafo aciclico dirigido (DAG)
+ *
+ */
 NodeTable *create_node_table();
 DAGNode *create_var_node(NodeTable *table, char *name);
 DAGNode *create_not_node(NodeTable *table, DAGNode *child);
@@ -72,20 +78,26 @@ void add_to_worklist(Worklist *list, DAGNode *node);
 DAGNode *remove_from_worklist(Worklist *list);
 int propagate_constraints(DAGNode *root, Worklist *list);
 
-/* Assignment functions */
+/*
+ *
+ */
 LinearAssignment *create_linear_assignment();
 void assign_linear_variable(LinearAssignment *assn, char *var, int value);
 int get_linear_variable_value(LinearAssignment *assn, char *var);
 void extract_assignment(DAGNode *root, LinearAssignment *assn);
 
-/* Main solver function */
+
 int linear_solve(ast *formula, LinearAssignment *assn);
 
-/* Memory management */
+/*
+ *
+ * Manejo de memoria
+ *
+ */
 void add_parent(DAGNode *child, DAGNode *parent);
 void free_dag_node(DAGNode *node);
 void free_node_table(NodeTable *table);
 void free_worklist(Worklist *list);
 void free_linear_assignment(LinearAssignment *assn);
 
-#endif /* LINEAR_SOLVER_H */
+#endif

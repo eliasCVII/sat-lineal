@@ -1,45 +1,55 @@
 #ifndef AST_H
 #define AST_H
 
-/**
- * ast.h - Abstract Syntax Tree type definitions and interface
+/*
+ *
+ * ast.h: Definiciones e interfaz para "Abstract Syntax Tree"
+ *
  */
 
-/* Node types for the AST */
+
 typedef enum {
-  NODE_VAR,    /* Variable node */
-  NODE_NOT,    /* Negation node */
-  NODE_AND,    /* AND node */
-  NODE_OR,     /* OR node */
-  NODE_IMPLIES, /* Implication node */
-  NODE_PAREN   /* Parenthesis node (for parsing) */
+  NODE_VAR,
+  NODE_NOT,
+  NODE_AND,
+  NODE_OR,
+  NODE_IMPLIES,
+  NODE_PAREN
 } NodeType;
 
-/* AST node structure */
+
+/*
+ *
+ * Estructura del arbol AST
+ * Representa un nodo en el árbol de sintaxis abstracta para expresiones lógicas.
+ * - NODE_VAR: Variable proposicional (almacena nombre en var_name)
+ * - NODE_NOT: Operador de negación (almacena operando en child)
+ * - NODE_AND, NODE_OR, NODE_IMPLIES: Operadores binarios (almacenan operandos en binop)
+ * - NODE_PAREN: Expresión entre paréntesis (almacena expresión en child)
+ *
+ */
 typedef struct ast {
   NodeType type;
   union {
-    char *var_name;        /* For variable nodes */
-    struct ast *child;     /* For unary operators (NOT, parentheses) */
+    char *var_name;
+    struct ast *child;
     struct {
-      struct ast *left;    /* Left operand for binary operators */
-      struct ast *right;   /* Right operand for binary operators */
+      struct ast *left;
+      struct ast *right;
     } binop;
   } data;
 } ast;
 
-/* AST construction functions */
+
 struct ast *make_var_node(char* name);
 struct ast *make_unary_node(NodeType type, ast* child);
 struct ast *make_binary_node(NodeType type, ast* l, ast* r);
 
-/* AST transformation functions - removed for linear solver */
 
-/* AST printing functions */
 void print_ast(ast* node);
 void print_ast_latex(ast* node);
 
-/* Memory management */
+
 void free_ast(ast* node);
 
-#endif /* AST_H */
+#endif

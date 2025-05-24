@@ -49,7 +49,7 @@ static unsigned long hash_node(DAGNode *node) {
 
 /* Create a new node table */
 NodeTable *create_node_table() {
-    NodeTable *table = malloc(sizeof(NodeTable));
+    NodeTable *table = calloc(1, sizeof(NodeTable));
     table->capacity = INITIAL_CAPACITY;
     table->size = 0;
     table->nodes = calloc(table->capacity, sizeof(DAGNode*));
@@ -126,7 +126,7 @@ static DAGNode *find_or_add_node(NodeTable *table, DAGNode *node) {
 
 /* Create a variable node */
 DAGNode *create_var_node(NodeTable *table, char *name) {
-    DAGNode *node = malloc(sizeof(DAGNode));
+    DAGNode *node = calloc(1, sizeof(DAGNode));
     node->type = NODE_VAR;
     node->constraint = UNCONSTRAINED;
     node->data.var_name = strdup(name);
@@ -142,7 +142,7 @@ DAGNode *create_not_node(NodeTable *table, DAGNode *child) {
     DAGNode *node;
     DAGNode *result;
 
-    node = malloc(sizeof(DAGNode));
+    node = calloc(1, sizeof(DAGNode));
     node->type = NODE_NOT;
     node->constraint = UNCONSTRAINED;
     node->data.child = child;
@@ -165,7 +165,7 @@ DAGNode *create_and_node(NodeTable *table, DAGNode *left, DAGNode *right) {
     DAGNode *node;
     DAGNode *result;
 
-    node = malloc(sizeof(DAGNode));
+    node = calloc(1, sizeof(DAGNode));
     node->type = NODE_AND;
     node->constraint = UNCONSTRAINED;
     node->data.binop.left = left;
@@ -190,7 +190,7 @@ DAGNode *create_or_node(NodeTable *table, DAGNode *left, DAGNode *right) {
     DAGNode *node;
     DAGNode *result;
 
-    node = malloc(sizeof(DAGNode));
+    node = calloc(1, sizeof(DAGNode));
     node->type = NODE_OR;
     node->constraint = UNCONSTRAINED;
     node->data.binop.left = left;
@@ -250,10 +250,10 @@ DAGNode *ast_to_dag(NodeTable *table, ast *node) {
 
 /* Create a worklist for constraint propagation */
 Worklist *create_worklist() {
-    Worklist *list = malloc(sizeof(Worklist));
+    Worklist *list = calloc(1, sizeof(Worklist));
     list->capacity = INITIAL_CAPACITY;
     list->size = 0;
-    list->nodes = malloc(list->capacity * sizeof(DAGNode*));
+    list->nodes = calloc(list->capacity, sizeof(DAGNode*));
     return list;
 }
 
@@ -396,7 +396,7 @@ int propagate_constraints(DAGNode *root, Worklist *list) {
 
 /* Create a new assignment */
 LinearAssignment *create_linear_assignment() {
-    LinearAssignment *assn = malloc(sizeof(LinearAssignment));
+    LinearAssignment *assn = calloc(1, sizeof(LinearAssignment));
     assn->variables = NULL;
     assn->values = NULL;
     assn->size = 0;

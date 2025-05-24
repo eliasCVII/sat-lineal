@@ -3,37 +3,57 @@
 #include <stdlib.h>
 #include <string.h>
 
-/**
- * ast.c - Implementation of AST operations
+/*
+ *
+ * ast.c: Implementacion de los operadores para la manipulacion de ASTs
+ *
  */
 
-/* Create a variable node */
+
+/*
+ *
+ */
 struct ast *make_var_node(char *name) {
-  ast *node = malloc(sizeof(ast));
+
+  ast *node = calloc(1, sizeof(ast));
   node->type = NODE_VAR;
   node->data.var_name = name;
   return node;
 }
 
-/* Create a unary operator node (NOT, parentheses) */
+
+/*
+ *
+ */
 struct ast *make_unary_node(NodeType type, ast *child) {
-  ast *node = malloc(sizeof(ast));
+
+  ast *node = calloc(1, sizeof(ast));
   node->type = type;
   node->data.child = child;
   return node;
 }
 
-/* Create a binary operator node (AND, OR, IMPLIES) */
+
+/*
+ *
+ */
 struct ast *make_binary_node(NodeType type, ast *l, ast *r) {
-  ast *node = malloc(sizeof(ast));
+
+  ast *node = calloc(1, sizeof(ast));
   node->type = type;
   node->data.binop.left = l;
   node->data.binop.right = r;
   return node;
 }
 
-/* Free an AST node and all its children */
+
+/*
+ *
+ * Libera memoria recursivamente dependiendo del tipo de nodo
+ *
+ */
 void free_ast(ast *node) {
+
   if (!node)
     return;
   switch (node->type) {
@@ -54,8 +74,12 @@ void free_ast(ast *node) {
   free(node);
 }
 
-/* Print an AST in text format */
+
+/*
+ *
+ */
 void print_ast(ast *node) {
+  
   if (!node)
     return;
   switch (node->type) {
@@ -96,8 +120,12 @@ void print_ast(ast *node) {
   }
 }
 
-/* Print an AST in LaTeX format */
+
+/*
+ *
+ */
 void print_ast_latex(ast *node) {
+
   if (!node)
     return;
   switch (node->type) {
