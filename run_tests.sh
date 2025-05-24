@@ -1,7 +1,6 @@
 #!/bin/bash
 
-# Run all tests in the tests directory
-# Usage: ./run_tests.sh [executable] [--show-input]
+# Uso: ./run_tests.sh [executable] [--show-input]
 
 EXECUTABLE=${1:-./tarea1.exe}
 TEST_DIR=tests
@@ -27,9 +26,8 @@ for test_file in $TEST_DIR/*.txt; do
     # Display input expression if requested
     if [ $SHOW_INPUT -eq 1 ]; then
         echo "Input expression:"
-        echo "----------------"
+        echo "\n----------------"
         cat "$test_file"
-        echo "----------------"
     fi
 
     # Run the test and capture output

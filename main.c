@@ -39,6 +39,34 @@ void process_input(ast *formula) {
   free_ast(formula);
 }
 
+/* Process the parsed input */
+void process_input_linear(ast *formula) {
+  if (!formula) {
+    printf("NO-SOLUTION\n");
+    return;
+  }
+
+  /* Create assignment structure */
+  LinearAssignment *assn = create_linear_assignment();
+
+  /* Solve using linear solver */
+  int result = linear_solve(formula, assn);
+
+  /* Print result */
+  if (result == 1) {
+    printf("SATISFACIBLE\n");
+  } else if (result == 0) {
+    printf("NO-SATISFACIBLE\n");
+  } else {
+    /* Ambiguous case - can't determine with linear solver */
+    printf("NO-SOLUTION\n");
+  }
+
+  /* Free resources */
+  free_linear_assignment(assn);
+  free_ast(formula);
+}
+
 /* Main function */
 int main(int argc, char **argv) {
   syntax_error_occurred = 0;
@@ -53,7 +81,7 @@ int main(int argc, char **argv) {
     if (formula) free_ast(formula);
   } else {
     /* Process the parsed formula */
-    process_input(formula);
+    process_input_linear(formula);
   }
 
   yylex_destroy();

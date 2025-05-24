@@ -13,9 +13,8 @@ clean:
 # Run a single test
 test: tarea1.exe
 	@echo "Input expression:"
-	@echo "----------------"
 	@cat expresion.txt
-	@echo "----------------"
+	@echo ""
 	@echo "Solver output:"
 	@./tarea1.exe < expresion.txt
 
